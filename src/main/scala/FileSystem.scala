@@ -17,8 +17,9 @@ class FileSystem {
 
   def help() : Unit = {
     println(
-      "Run the following commands (without quotes):\n" +
-        "\"curdir\" = will show the current directory"
+      """Run the following commands (without quotes):
+        |"curdir" = will show the current directory
+        |""".stripMargin
     )
   }
 
