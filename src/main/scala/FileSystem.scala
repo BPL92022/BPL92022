@@ -9,7 +9,7 @@ class FileSystem {
       case "q" => "The key q is pressed, the app will close."
       case "h" =>  help(); commandInterpretor()
       case "curdir" => println( getCurrentPath ); commandInterpretor()
-      case _   => println("The command is not recognized. Type \"h\" to list the commands and how to use them or \"q\" to quit."); commandInterpretor()
+      case _   => println("""The command is not recognized. Type "h" to list the commands and how to use them or "q" to quit."""); commandInterpretor()
     }
 
     println( cmdMatcher )
