@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="ProjectModuleManager">
+    <modules>
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/FileSystemScala.iml" filepath="$PROJECT_DIR$/.idea/modules/FileSystemScala.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/FileSystemScala-build.iml" filepath="$PROJECT_DIR$/.idea/modules/FileSystemScala-build.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/project.FileSystemScala-build.iml" filepath="$PROJECT_DIR$/.idea/modules/project.FileSystemScala-build.iml" />
+    </modules>
+  </component>
+</project>
