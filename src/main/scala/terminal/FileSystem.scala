@@ -1,113 +1,73 @@
 package terminal
 
-import java.util.NoSuchElementException
+object FileSystem {
 
-
-class FileSystem {
-  //key = command;  value = how many paths need to be specified
-  val commandsAndNoOfPaths = Map("pwd" -> 0, "mkdir" -> 1, "ls" -> 0, "h" -> 0, "q" -> 0 )
-
-  var rootPath : Folders = _
-  var currentLevel : Folders = _
-  var cmdPrefix : String = ""
-  var path1_from : String = ""
-  var path2_to : String = ""
-
-
-
-  def run() : Unit = {
-    //initialize the root
-    rootPath = new Folders("")
-    rootPath.currentPath = "/"
-    currentLevel = rootPath
-
-    //run the terminal continuously until is chosen q to quit
-    commandInterpretor()
-  }
-
-
-  def commandInterpretor() : Unit = {
-    print( """Your cmd (press "q" to quit, "h" for help): """ )
-    val keyboardInput = getKeyboardInput
-
-    splitToCmdAndPaths( keyboardInput )
-
-    cmdPrefix match {
-      case "pwd"        => println( getCurrentDirectoryPath ); unitializeCmdAndPaths(); commandInterpretor()
-      case "mkdir"      => if(path1_from.nonEmpty) makeFolder(); unitializeCmdAndPaths(); commandInterpretor()
-      case "ls"         => listAllFilesAndFolders(); unitializeCmdAndPaths(); commandInterpretor()
-      case "h"          => help(); unitializeCmdAndPaths(); commandInterpretor()
-      case "q"          => println("You chose q, the app will close.")
-      case _            => println( "Command not recognized." ); commandInterpretor()     //this default case will keep the "terminal" running even in case if is a command not recognized
+  def ls(currentFolderList: List[Folder]): Unit = {
+    for (content <- currentFolderList) {
+      print(s"${content.name}(${content.typeOfThis}), ")
     }
+    println()
   }
 
-  def getKeyboardInput : String = scala.io.StdIn.readLine()
-
-  def getCurrentDirectoryPath : String = currentLevel.currentPath
-
-  def help() : Unit = {
-    println(
-      """Can be used the following commands:
-        |pwd
-        |mkdir
-        |ls""".stripMargin)
+  def mkdir(currentFolderList: List[Folder], folderName: String): List[Folder] = {
+    new Folder(folderName) :: currentFolderList
   }
 
-  def splitToCmdAndPaths( inputKeyboard : String ) : Unit = {
-    try{
-      //find the command; handle the case if the command does not exist
-      this.cmdPrefix = commandsAndNoOfPaths.filter(
-        x => inputKeyboard.startsWith(x._1)
-      ).keys.head    //return into cmdPrefix the first element (and the only element) of the List which met the condition "inputKeyboard.startsWith( x )"
+  def mkfile(currentFolderList: List[Folder], fileName: String, contentFile : String = ""): List[Folder] = {
+    new File(fileName, contentFile) :: currentFolderList
+  }
 
+  def cd(currentFolderList: List[Folder], folderName: String): Option[Folder] = {
+    for (folder <- currentFolderList) {
+      if (folder.name == folderName)
+        return Some(folder)
+    }
+    None
+  }
 
-      //find the path or paths if the command support them; Ex: mkdir support one path; cp support 2 paths
-      commandsAndNoOfPaths( this.cmdPrefix ) match {
-        case 0 =>                 //this is necessary, else will enter into the catch
+  def appendTextToFile(currentFolderList: List[Folder], contentToBeAdded: String, fileName: String): List[Folder] = {
 
-        case 1 =>
-          val splittedPaths : Array[String] = inputKeyboard.split( " " )
+    for (item <- currentFolderList) {
 
-          if( splittedPaths.length == 1 ) throw new IllegalArgumentException
-          if( splittedPaths.length > 2 ) throw new RuntimeException
-
-
-          this.path1_from = splittedPaths(1)
-
-        case 2 =>
-          val splittedPaths : Array[String] = inputKeyboard.split( " " )
-
-
-          if( splittedPaths.length > 3 ) throw new RuntimeException
-
-          this.path1_from = splittedPaths(1)
-          this.path2_to = splittedPaths(2)
+      if (item.name == fileName) {
+        val obiectDeModificat: File = item.asInstanceOf[terminal.File] //trateaza itemul ca File si nu ca Folder; File e child class din Folder
+        val continutNou: String = obiectDeModificat.contentFile + contentToBeAdded
+        val listaFaraFisierulVechi : List[Folder] = rm( currentFolderList, fileName )
+        return mkfile( listaFaraFisierulVechi, fileName, continutNou )
       }
-    }catch {
-      case e: NoSuchElementException => println( "There is no such command" )
-      case e: IllegalArgumentException => println( "It is expected the name of the file to be created" )
-      case e: RuntimeException => println( "It is expected just the file/folder name after the command. Ex: mkdir MyPhotos" )
-
-      unitializeCmdAndPaths()
     }
+    currentFolderList
   }
 
-  def makeFolder() : Unit = {
-    currentLevel.whatContainsAtThisLevel = currentLevel.whatContainsAtThisLevel :+ new Folders( path1_from )
+  def cat( currentFolderList: List[Folder], fileName: String ) : String = {
+    for (item <- currentFolderList) {
 
+      if (item.name == fileName) {
+        val fisierulDeVizualizat: File = item.asInstanceOf[terminal.File] //trateaza itemul ca File si nu ca Folder; File e child class din Folder
+        return fisierulDeVizualizat.contentFile
+      }
+
+    }
+    s"Nu exista fisierul $fileName"
   }
 
-  def listAllFilesAndFolders() : Unit = {
-    currentLevel.whatContainsAtThisLevel.foreach(
-      x => println( s"${x.name}(${x.typeOfThisObject})" )
-    )
+  def rm( currentFolderList: List[Folder], fileName: String ) : List[Folder] = {
+    for( item <- currentFolderList ){
+      if( item.name == fileName ){
+        return currentFolderList.filter( _ != item )
+      }
+    }
+    currentFolderList
   }
 
-  def unitializeCmdAndPaths() : Unit = {
-    cmdPrefix = null
-    path1_from = ""
-    path2_to = ""
+  def cp( currentFolderList: List[Folder], fileName: String, fileName2 : String ) : List[Folder] = {
+    for( item <- currentFolderList ){
+      if(item.name == fileName){
+        val obiectDeModificat: File = item.asInstanceOf[terminal.File]
+        return mkfile( currentFolderList, fileName2, obiectDeModificat.contentFile )
+      }
+    }
+    println(s"THere is no such file $fileName")
+    currentFolderList
   }
-
 }
